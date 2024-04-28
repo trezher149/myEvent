@@ -3,6 +3,8 @@ import json
 from datetime import datetime
 import cv2 as cv
 from uuid import uuid4
+from pymongo import GEOSPHERE
+from bson.son import SON
 
 event = {
     "eventId": "",
@@ -17,7 +19,7 @@ event = {
     "eventStart": None,
     "eventEnd": None,
     "durationDays": 1,
-    "latLong": (0, 0),
+    "location": None,
     "createdAt": None,
     "editedAt": None,
     "hasEdited": False,
@@ -33,7 +35,7 @@ participant = {
     "validUntil": None
 }
 
-def create_event(event_info, image, latlong):
+def create_event(event_info, image, longlat: list):
     event["eventId"] = str(uuid4().hex) 
     event["owner"] = event_info["userId"]
     event["type"] = event_info["type"]
@@ -42,19 +44,30 @@ def create_event(event_info, image, latlong):
     event["title"] = event_info["title"]
     event["description"] = event_info["description"]
     event["locationText"] = event_info["locationText"]
-    event["latLong"] = event_info["latLong"]
+    event["location"] = longlat
     event["createdAt"] = datetime.today()
     event["editedAt"] = datetime.today()
     event["eventStart"] = datetime.fromisoformat(event_info["eventStart"])
     event["eventEnd"] = datetime.fromisoformat(event_info["eventEnd"])
     event["durationDays"] = 1 + ((event["eventEnd"] - event["eventStart"]).days)
-    event["latLong"] = latlong
     db = get_db_handle("myEvent", "localhost", "27017", "root", "password")
     table = db["events"]
-    pass
+    table.create_index([("location", GEOSPHERE)], unique=False)
+    table.insert_one(event)
+    return event["eventId"]
 
-def find_event(latlong, type, age_min, age_max, title):
-    pass
+def find_event(longlat: list, type="", age_min=0, age_max=0, title=""):
+    db = get_db_handle("myEvent", "localhost", "27017", "root", "password")
+    table = db["events"]
+    query = {"location": SON([("$nearSphere", longlat), ("$maxDistance", 10000)])}
+    if len(type) > 0:
+        query["type"] = type
+    if age_min > 0:
+        query["ageMin"] = {"date": {"$gte": age_min}}
+    if age_max > 0:
+        query[""]
+    data = table.find(query)
+    return data
 
 def event_update(event_id, update_info, image_byte):
     pass
