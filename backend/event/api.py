@@ -1,16 +1,16 @@
 from django.http import HttpResponse, HttpRequest
 from .models import event
 import json
+import base64
 
 def event_create(request: HttpRequest):
     if request.method == "GET":
         return
-    event_info = json.loads(request.body)
-    image_byte = event_info["image"]
-    del event_info["image"]
+    print(request.POST.dict())
+    image_byte = request.FILES.dict()["image"].read()
     response = HttpResponse()
     # try:
-    event_id = event.create_event(event_info, image_byte)
+    event_id = event.create_event(request.POST.dict(), image_byte)
     response.content = json.dumps({"eventId": event_id})
     # except:
         # response.status_code = 500
@@ -18,16 +18,19 @@ def event_create(request: HttpRequest):
     return response
     
 
-def event_nearest(request):
+def event_nearest(request: HttpRequest):
     if request.method == "GET":
         return
-    filter = json.loads(request.body)
-    nearest_event = event.find_event(filter["longLat"],
+    filter = request.POST.dict()
+    longlat = [float(filter["long"]), float(filter["lat"])]
+    nearest_event = event.find_event(longlat,
                                     filter["type"],
-                                    filter["ageMin"],
-                                    filter["ageMax"],
+                                    int(filter["ageMin"]),
+                                    int(filter["ageMax"]),
                                     filter["title"])
     return HttpResponse(json.dumps({"nearestEvent": nearest_event}))
+    # print(nearest_event)
+    # return HttpResponse()
 
 def event_details(request):
     return HttpResponse("details")
