@@ -8,3 +8,8 @@ user_event = {
 }
 
 #Under Construction
+def get_user_events(user_id):
+    db = get_db_handle("myEvent", "localhost", "27017", "root", "password")
+    table = db["user_events"]
+    user_events = table.find_one({"user_id": user_id})
+    return user_events

@@ -39,3 +39,18 @@ def find_username(username):
     table = db["users"]
     user =  table.find_one({"username": username})
     return user["user_id"]
+
+def user_profile(user_id):
+    db = get_db_handle("myEvent", "localhost", "27017", "root", "password")
+    table = db["users"]
+    user = table.find_one({"user_id": user_id})
+    if user:
+        user_profile = {
+            "user_id": user["user_id"],
+            "email": user["email"],
+            "username": user["username"],
+            
+        }
+        return user_profile
+    else:
+        return None
