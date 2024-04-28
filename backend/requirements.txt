@@ -4,6 +4,8 @@ distlib==0.3.8
 Django==5.0.4
 dnspython==2.6.1
 filelock==3.13.4
+geographiclib==2.0
+geopy==2.4.1
 pbr==6.0.0
 platformdirs==4.2.1
 pykerberos==1.2.4
