@@ -1,4 +1,5 @@
 from utils import get_db_handle
+from uuid import uuid4
 
 user_event = {
     "user_id": "",
@@ -6,7 +7,4 @@ user_event = {
     "event_create": []
 }
 
-participant_id = {
-    "event_id": "",
-    "participant_id": ""
-}
+#Under Construction
