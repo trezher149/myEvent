@@ -85,4 +85,12 @@ def list_participants(event_id):
 
 
 def participate(event_id, user_id):
-    pass
+    participant["eventId"] = event_id
+    participant["participantId"] = user_id
+    participant["joinedAt"] = datetime.today()
+    participant["validUntil"] = None  # กำหนดวันหมดอายุได้
+    db = get_db_handle("myEvent", "localhost", "27017", "root", "password")
+    table = db["participants"]
+    table.insert_one(participant)
+    return participant["eventId"]
+
