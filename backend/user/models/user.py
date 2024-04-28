@@ -18,7 +18,7 @@ def create_user(email, username, password, infos={}):
     user_model["username"] = username
     user_model["password"] = password
     table.insert_one(user_model)
-    return user_model
+    return id
 
 def login_user(username, password):
     db = get_db_handle("myEvent", "localhost", "27017", "root", "password")

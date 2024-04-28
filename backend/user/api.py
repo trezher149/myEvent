@@ -19,9 +19,10 @@ def signup(request: HttpRequest):
         response.content = json.dumps({"usernameTaken": username_taken,
                                        "emailTaken": email_taken})
         return response
-    db_name = user.create_user(signup_info["email"],
+    id = user.create_user(signup_info["email"],
                                signup_info["username"],
                                signup_info["password"])
+    response.content = json.dumps({"userId": id})
     return response
 
 def login(request: HttpRequest):
