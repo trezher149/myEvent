@@ -3,9 +3,13 @@ import json
 from datetime import datetime
 import cv2 as cv
 from uuid import uuid4
-from pymongo import GEOSPHERE
+from pymongo import GEOSPHERE 
 from bson.son import SON
 from geopy.distance import great_circle
+import numpy as np
+from io import BytesIO
+from pathlib import Path
+import pprint
 
 event = {
     "eventId": "",
@@ -38,14 +42,23 @@ participant = {
 
 def create_event(event_info, image):
     event["eventId"] = str(uuid4().hex)[:6]
+    arr = np.asarray(bytearray(image), dtype=np.uint8)
+    img = cv.imdecode(arr, flags=cv.IMREAD_COLOR)
+    cwd = Path.cwd()
+    folder = Path(cwd / "event_image")
+    if not folder.exists():
+        (cwd / "event_image").mkdir()
+    cv.imwrite(f'{cwd}/event_image/{event["eventId"]}.jpg', img)
+    event["imageLocation"] = f'{cwd}/event_image/{event["eventId"]}.jpg'
     event["owner"] = event_info["userId"]
     event["type"] = event_info["type"]
-    event["ageMin"] = event_info["ageMin"]
-    event["ageMax"] = event_info["ageMax"]
+    event["ageMin"] = int(event_info["ageMin"])
+    event["ageMax"] = int(event_info["ageMax"])
     event["title"] = event_info["title"]
     event["description"] = event_info["description"]
     event["locationText"] = event_info["locationText"]
-    event["location"] = event_info["longLat"]
+    event["location"] = [float(event_info["long"]), float(event_info["lat"])]
+    print(event["location"])
     event["createdAt"] = datetime.today()
     event["editedAt"] = datetime.today()
     event["eventStart"] = datetime.fromisoformat(event_info["eventStart"])
@@ -62,13 +75,16 @@ def find_event(longlat: list, event_type="", age_min=0, age_max=0, title=""):
     table = db["events"]
     max_distance_radians = 10000 / 6371000
     query = {"location": SON([("$nearSphere", longlat), ("$maxDistance", max_distance_radians)])}
+    print(query)
     if len(event_type) > 0:
         query["type"] = type
     if age_min > 0:
         query["ageMin"] = {"$gte": age_min}
     if age_max > 0:
         query["ageMax"] = {"$lte": age_max}
-    data = list(table.find(query, {'_id':False, 'createdAt':False, 'approvedAt':False}))
+    data = list(table.find(query))
+
+    print(data)
     for d in data:
         d["editedAt"] = d["editedAt"].isoformat()
         d["eventStart"] = d["eventStart"].isoformat()
