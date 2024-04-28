@@ -9,7 +9,7 @@ user_model = {
     "password": "",
 }
 
-def create_user(email, username, password, infos):
+def create_user(email, username, password, infos={}):
     db = get_db_handle("myEvent", "localhost", "27017", "root", "password")
     table = db["users"]
     id = str((uuid4().hex)[:6])
@@ -32,13 +32,17 @@ def find_email(email):
     db = get_db_handle("myEvent", "localhost", "27017", "root", "password")
     table = db["users"]
     user =  table.find_one({"email": email})
-    return user["user_id"]
+    if user : 
+        return user["user_id"]
+    return None
 
 def find_username(username):
     db = get_db_handle("myEvent", "localhost", "27017", "root", "password")
     table = db["users"]
     user =  table.find_one({"username": username})
-    return user["user_id"]
+    if user : 
+        return user["user_id"]
+    return None
 
 def user_profile(user_id):
     db = get_db_handle("myEvent", "localhost", "27017", "root", "password")
@@ -49,8 +53,11 @@ def user_profile(user_id):
             "user_id": user["user_id"],
             "email": user["email"],
             "username": user["username"],
-            
         }
         return user_profile
     else:
         return None
+
+
+
+    
