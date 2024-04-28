@@ -71,27 +71,30 @@ def create_event(event_info, image):
     return event["eventId"]
 
 def find_event(longlat: list, event_type="", age_min=0, age_max=0, title=""):
-    db = get_db_handle("myEvent", "localhost", "27017", "root", "password")
-    table = db["events"]
-    max_distance_radians = 10000 / 6371000
-    query = {"location": SON([("$nearSphere", longlat), ("$maxDistance", max_distance_radians)])}
-    print(query)
-    if len(event_type) > 0:
-        query["type"] = type
-    if age_min > 0:
-        query["ageMin"] = {"$gte": age_min}
-    if age_max > 0:
-        query["ageMax"] = {"$lte": age_max}
-    data = list(table.find(query))
+    try:
+        db = get_db_handle("myEvent", "localhost", "27017", "root", "password")
+        table = db["events"]
+        max_distance_radians = 10000 / 6371000
+        query = {"location": SON([("$nearSphere", longlat), ("$maxDistance", max_distance_radians)])}
+        print(query)
+        if event_type:  # แก้ไขการตรวจสอบประเภทกิจกรรม
+            query["type"] = event_type
+        if age_min > 0:
+            query["ageMin"] = {"$gte": age_min}
+        if age_max > 0:
+            query["ageMax"] = {"$lte": age_max}
+        data = list(table.find(query))
+        
+        for d in data:
+            d["editedAt"] = d["editedAt"].isoformat()
+            d["eventStart"] = d["eventStart"].isoformat()
+            d["eventEnd"] = d["eventEnd"].isoformat()
+            d["distance"] = great_circle((longlat[1], longlat[0]), (d["location"][1], d["location"][0])).meters
+        return data
+    except Exception as e:
+        print(f"An error occurred while finding events: {e}")
+        return []
 
-    print(data)
-    for d in data:
-        d["editedAt"] = d["editedAt"].isoformat()
-        d["eventStart"] = d["eventStart"].isoformat()
-        d["eventEnd"] = d["eventEnd"].isoformat()
-        d["distance"] = great_circle((longlat[1], longlat[0]), (d["location"][1], d["location"][0])).meters
-    print(type(data))
-    return data
 
 def list_participants(event_id):
     try:
