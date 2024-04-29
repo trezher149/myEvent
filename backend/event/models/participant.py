@@ -49,9 +49,11 @@ def get_participants(event_id):
         table = db["participants"]
         # ใช้ find เพื่อค้นหาผู้เข้าร่วมกิจกรรมทั้งหมดที่มี eventId ตรงกับ event_id
         cursor = table.find({"eventId": event_id})
-        if cursor.retrieved == 0:
-            return []
+        # if cursor.retrieved == 0:
+        #     return []
         participants = list(cursor)
+        for p in participants:
+            del p["_id"]
         return participants
     except Exception as e:
         print(f"An error occurred while listing participants: {e}")
@@ -66,6 +68,7 @@ def participate(event_id, user_id):
     # กำหนดวันหมดอายุเป็น 1 เดือนหลังจากวันที่เข้าร่วม
     db = get_db_handle("myEvent", "localhost", "27017", "root", "password")
     table = db["participants"]
+    print(event_part)
     table.insert_one(event_part)
     return event_part["participantId"]
 
