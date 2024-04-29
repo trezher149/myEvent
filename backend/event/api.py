@@ -2,6 +2,7 @@ from django.http import HttpResponse, HttpRequest
 from .models import event
 import json
 import base64
+from django.http import JsonResponse
 
 def event_create(request: HttpRequest):
     if request.method == "GET":
@@ -88,4 +89,25 @@ def participate(event_id, user_id):
     except Exception as e:
         print(f"An error occurred while participating in the event: {e}")
         return None
+
+def approve_event(event_id):
+    try:
+        db = get_db_handle("myEvent", "localhost", "27017", "root", "password")
+        table = db["events"]
+        # ทำการอัปเดตสถานะเป็นอนุมัติ
+        table.update_one({"eventId": event_id}, {"$set": {"isApproved": True, "approvedAt": datetime.today()}})
+        return True
+    except Exception as e:
+        print(f"An error occurred while approving event: {e}")
+        return False
+
+def approve_event_view(request, event_id):
+    if request.method == 'POST':
+        success = api.approve_event(event_id)
+        if success:
+            return JsonResponse({"message": "Event approved successfully"}, status=200)
+        else:
+            return JsonResponse({"message": "Failed to approve event"}, status=400)
+    else:
+        return JsonResponse({"message": "Method not allowed"}, status=405)
 

@@ -7,4 +7,5 @@ urlpatterns = [
     path("participants/<str:event_id>", api.list_participants, name="list_participants"),
     path("update/<str:event_id>", api.event_update, name="event_update"),
     path("participate", api.participate, name="participate"),
+    path("approve/<str:event_id>", api.approve_event_view, name="approve_event"),  # เพิ่ม URL สำหรับการอนุมัติ
 ]
