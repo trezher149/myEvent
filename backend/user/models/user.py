@@ -3,13 +3,17 @@ from pymongo import MongoClient
 from uuid import uuid4, UUID
 
 user_model = {
-    "user_id": "",
-    "email": "",
-    "username": "",
-    "password": "",
+    "user_id": "",          
+    "email": "",          
+    "username": "",        
+    "password": "",       
+    "gender": "",         
+    "age": "",             
+    "favorite": ""   
 }
 
-def create_user(email, username, password, infos={}):
+
+def create_user(email, username, password, gender,age,favorite, infos={}):
     db = get_db_handle("myEvent", "localhost", "27017", "root", "password")
     table = db["users"]
     id = str((uuid4().hex)[:6])
@@ -17,6 +21,9 @@ def create_user(email, username, password, infos={}):
     user_model["email"] = email 
     user_model["username"] = username
     user_model["password"] = password
+    user_model["gender"] = gender
+    user_model["age"] = age
+    user_model["favorite"] = favorite
     table.insert_one(user_model)
     return id
 
@@ -53,6 +60,9 @@ def user_profile(user_id):
             "user_id": user["user_id"],
             "email": user["email"],
             "username": user["username"],
+            "gender": user["gender"],
+            "age": user["age"],
+            "favorite": user["favorite"],
         }
         return user_profile
     else:

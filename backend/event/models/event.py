@@ -30,7 +30,8 @@ event = {
     "hasEdited": False,
     "waitForApproval": True,
     "isApproved": False,
-    "approvedAt": None
+    "approvedAt": None,
+    "gender": "",
 }
 
 def create_event(event_info, image):
@@ -47,6 +48,7 @@ def create_event(event_info, image):
     event["type"] = event_info["type"]
     event["ageMin"] = int(event_info["ageMin"])
     event["ageMax"] = int(event_info["ageMax"])
+    event["gender"] = event_info["gender"]
     event["title"] = event_info["title"]
     event["description"] = event_info["description"]
     event["locationText"] = event_info["locationText"]
@@ -64,7 +66,7 @@ def create_event(event_info, image):
     table.insert_one(event)
     return event["eventId"]
 
-def find_event(longlat: list, event_type="", age_min=0, age_max=0, title=""):
+def find_event(longlat: list, event_type="", age_min=0, age_max=0, title="",event_gender=""):
     try:
         max_distance_radians = 5000 / 6371000
         query = {
@@ -80,6 +82,9 @@ def find_event(longlat: list, event_type="", age_min=0, age_max=0, title=""):
         if age_max > 0:
             print("ageMax")
             query["ageMax"] = {"$lte": age_max}
+        if event_gender:
+            print("gender")
+            query["gender"] = event_gender
         db = get_db_handle("myEvent", "localhost", "27017", "root", "password")
         table = db["events"]
 

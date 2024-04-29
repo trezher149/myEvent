@@ -30,7 +30,9 @@ def event_nearest(request: HttpRequest):
                                     filter["type"],
                                     int(filter["ageMin"]),
                                     int(filter["ageMax"]),
-                                    filter["title"])
+                                    filter["title"],
+                                    filter["gender"],),
+
     # return HttpResponse(json.dumps({"nearestEvent": nearest_event}))
     return JsonResponse({"nearestEvents": nearest_events})
     # print(nearest_event)
