@@ -33,13 +33,6 @@ event = {
     "approvedAt": None
 }
 
-participant = {
-    "eventId": "",
-    "participantId": "",
-    "joinedAt": None,
-    "validUntil": None
-}
-
 def create_event(event_info, image):
     event["eventId"] = str(uuid4().hex)[:6]
     arr = np.asarray(bytearray(image), dtype=np.uint8)
@@ -138,3 +131,16 @@ def approve_event_view(request, event_id):
         return JsonResponse({"message": "Method not allowed"}, status=405)
 
 
+
+
+
+def event_update(event_id, update_info, image_byte):
+    try:
+        # ทำการอัปเดตข้อมูลของกิจกรรมที่มี eventId ตรงกับ event_id ด้วยข้อมูลใหม่จาก update_info
+        db = get_db_handle("myEvent", "localhost", "27017", "root", "password")
+        table = db["events"]
+        table.update_one({"eventId": event_id}, {"$set": update_info})
+        return True
+    except Exception as e:
+        print(f"An error occurred while updating event: {e}")
+        return False
