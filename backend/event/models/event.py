@@ -113,41 +113,28 @@ def find_event(longlat: list, event_type="", age_min=0, age_max=0, title=""):
         print(f"An error occurred while finding events: {e}")
         return []
 
+#------------------------------------------- approve
 
 
-def list_participants(event_id):
+def approve_event(event_id):
     try:
-        db = get_db_handle("myEvent", "localhost", "27017", "root", "password")
-        table = db["participants"]
-        # ใช้ find เพื่อค้นหาผู้เข้าร่วมกิจกรรมทั้งหมดที่มี eventId ตรงกับ event_id
-        participants = list(table.find({"eventId": event_id}))
-        return participants
-    except Exception as e:
-        print(f"An error occurred while listing participants: {e}")
-        return []
-
-
-def event_update(event_id, update_info, image_byte):
-    try:
-        # ทำการอัปเดตข้อมูลของกิจกรรมที่มี eventId ตรงกับ event_id ด้วยข้อมูลใหม่จาก update_info
         db = get_db_handle("myEvent", "localhost", "27017", "root", "password")
         table = db["events"]
-        table.update_one({"eventId": event_id}, {"$set": update_info})
+        # ทำการอัปเดตสถานะเป็นอนุมัติ
+        table.update_one({"eventId": event_id}, {"$set": {"isApproved": True, "approvedAt": datetime.today()}})
         return True
     except Exception as e:
-        print(f"An error occurred while updating event: {e}")
+        print(f"An error occurred while approving event: {e}")
         return False
 
-
-def participate(event_id, user_id):
-    participant["eventId"] = event_id
-    participant["participantId"] = user_id
-    participant["joinedAt"] = datetime.today()
-    # กำหนดวันหมดอายุเป็น 1 เดือนหลังจากวันที่เข้าร่วม
-    participant["validUntil"] = participant["joinedAt"] + timedelta(days=30)
-    db = get_db_handle("myEvent", "localhost", "27017", "root", "password")
-    table = db["participants"]
-    table.insert_one(participant)
-    return participant["eventId"]
+def approve_event_view(request, event_id):
+    if request.method == 'POST':
+        success = api.approve_event(event_id)
+        if success:
+            return JsonResponse({"message": "Event approved successfully"}, status=200)
+        else:
+            return JsonResponse({"message": "Failed to approve event"}, status=400)
+    else:
+        return JsonResponse({"message": "Method not allowed"}, status=405)
 
 
