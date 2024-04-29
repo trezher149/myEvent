@@ -51,7 +51,7 @@ def join_participant(request: HttpRequest):
         return HttpResponse(status=400)  # Bad Request
 
     try:
-        participate(event_id, user_id)
+        event.participate(event_id, user_id)
         return HttpResponse(status=201)  # Created
     except Exception as e:
         print(f"An error occurred while adding participant: {e}")
