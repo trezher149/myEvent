@@ -1,5 +1,5 @@
 from utils import get_db_handle
-import json
+import base64
 from datetime import datetime
 import cv2 as cv
 from uuid import uuid4
@@ -9,7 +9,6 @@ from geopy.distance import great_circle
 import numpy as np
 from io import BytesIO
 from pathlib import Path
-import pprint
 from datetime import datetime, timedelta
 
 event = {
@@ -59,80 +58,18 @@ def create_event(event_info, image):
     event["description"] = event_info["description"]
     event["locationText"] = event_info["locationText"]
     event["location"] = [float(event_info["long"]), float(event_info["lat"])]
-    print(event["location"])
-    event["createdAt"] = datetime.today()
-    event["editedAt"] = datetime.today()
-    event["eventStart"] = datetime.fromisoformat(event_info["eventStart"])
-    event["eventEnd"] = datetime.fromisoformat(event_info["eventEnd"])
-    event["durationDays"] = 1 + ((event["eventEnd"] - event["eventStart"]).days)
+    event["createdAt"] = datetime.today().isoformat()
+    event["editedAt"] = datetime.today().isoformat()
+    event["eventStart"] = event_info["eventStart"]
+    event["eventEnd"] = event_info["eventEnd"]
+    start = datetime.fromisoformat(event["eventStart"])
+    end = datetime.fromisoformat(event["eventEnd"])
+    event["durationDays"] = 1 + ((end - start).days)
     db = get_db_handle("myEvent", "localhost", "27017", "root", "password")
     table = db["events"]
     table.create_index([("location", GEOSPHERE)], unique=False)
     table.insert_one(event)
     return event["eventId"]
-
-# def find_event(longlat: list, event_type="", age_min=0, age_max=0, title=""):
-#     db = get_db_handle("myEvent", "localhost", "27017", "root", "password")
-#     table = db["events"]
-#     max_distance_radians = 10000 / 6371000
-#     query = {"location": SON([("$nearSphere", longlat), ("$maxDistance", max_distance_radians)])}
-#     print(query)
-#     if len(event_type) > 0:
-#         query["type"] = type
-#     if age_min > 0:
-#         query["ageMin"] = {"$gte": age_min}
-#     if age_max > 0:
-#         query["ageMax"] = {"$lte": age_max}
-#     data = list(table.find(query))
-
-#     print(data)
-#     for d in data:
-#         d["editedAt"] = d["editedAt"].isoformat()
-#         d["eventStart"] = d["eventStart"].isoformat()
-#         d["eventEnd"] = d["eventEnd"].isoformat()
-#         d["distance"] = great_circle((longlat[1], longlat[0]), (d["location"][1], d["location"][0])).meters
-#     print(type(data))
-#     return data
-# -------------ของกาฟิว
-
-# def find_event(longlat: list, event_type="", age_min=0, age_max=0, title=""):
-#     try:
-#         max_distance_radians = 10000 / 6371000
-#         query = {"location": SON([("$nearSphere", longlat), ("$maxDistance", max_distance_radians)])}
-#         if event_type:  # แก้ไขการตรวจสอบประเภทกิจกรรม
-#             print("type")
-#             query["type"] = event_type
-#         if age_min > 0:
-#             print("ageMin")
-#             query["ageMin"] = {"$gte": age_min}
-#         if age_max > 0:
-#             print("ageMax")
-#             query["ageMax"] = {"$lte": age_max}
-#         db = get_db_handle("myEvent", "localhost", "27017", "root", "password")
-#         table = db["events"]
-
-#         # Problem with this fricking fuction
-#         cursor = table.find(query, {'_id': False})
-#         print(cursor)
-#         if cursor.retrieved == 0:
-#             return []
-#         data = list(cursor) 
-#         cursor.close()
-
-#         for d in data:
-#             image = cv.imread(d["imageLocation"], flags=cv.IMREAD_COLOR)
-#             is_success, img_buf_arr = cv.imencode(".jpg", image)
-#             del d["imageLocation"]
-#             d["editedAt"] = d["editedAt"].isoformat()
-#             d["eventStart"] = d["eventStart"].isoformat()
-#             d["eventEnd"] = d["eventEnd"].isoformat()
-#             d["distance"] = great_circle((longlat[1], longlat[0]), (d["location"][1], d["location"][0])).meters
-#             d["imageByte"] = img_buf_arr.tobytes()
-#         return data
-#     except Exception as e:
-#         print(f"An error occurred while finding events: {e}")
-#         return []
-#------------------------------------ ผิดพลาดอันที่ 2
 
 def find_event(longlat: list, event_type="", age_min=0, age_max=0, title=""):
     try:
@@ -150,27 +87,27 @@ def find_event(longlat: list, event_type="", age_min=0, age_max=0, title=""):
         db = get_db_handle("myEvent", "localhost", "27017", "root", "password")
         table = db["events"]
 
-        # ดัดแปลงการค้นหาเพื่อเช็คว่ามีข้อมูลหรือไม่ก่อนการดึง
-        cursor = table.find(query, {'_id': False})
+        # Problem with this fricking fuction
+        cursor = table.find(query).sort({'_id': -1})
+        print(cursor)
         data = list(cursor) 
+        if cursor.retrieved == 0:
+            return []
         cursor.close()
 
         for d in data:
-            # เพิ่มการตรวจสอบก่อนการใช้งานไฟล์รูปภาพ
-            if "imageLocation" in d:
-                image = cv.imread(d["imageLocation"], flags=cv.IMREAD_COLOR)
-                if image is not None:  # ตรวจสอบว่าสามารถอ่านรูปได้หรือไม่
-                    is_success, img_buf_arr = cv.imencode(".jpg", image)
-                    del d["imageLocation"]
-                    d["editedAt"] = d["editedAt"].isoformat()
-                    d["eventStart"] = d["eventStart"].isoformat()
-                    d["eventEnd"] = d["eventEnd"].isoformat()
-                    d["distance"] = great_circle((longlat[1], longlat[0]), (d["location"][1], d["location"][0])).meters
-                    d["imageByte"] = img_buf_arr.tobytes()
-                else:
-                    print(f"Unable to read image: {d['imageLocation']}")
-            else:
-                print("Image location not found in data")
+            image = cv.imread(d["imageLocation"], flags=cv.IMREAD_COLOR)
+            is_success, img_buf_arr = cv.imencode(".jpg", image)
+            del d["_id"]
+            del d["imageLocation"]
+            # d["editedAt"] = d["editedAt"].isoformat()
+            # d["eventStart"] = d["eventStart"].isoformat()
+            # d["eventEnd"] = d["eventEnd"].isoformat()
+            d["distance"] = great_circle((longlat[1], longlat[0]), (d["location"][1], d["location"][0])).meters
+            byte_arr = img_buf_arr.tobytes()
+            d["imageBase64"] = base64.b64encode(byte_arr).decode('ascii')
+            print(d["imageBase64"])
+        data = sorted(data, key=lambda d: d["distance"])
         return data
     except Exception as e:
         print(f"An error occurred while finding events: {e}")
