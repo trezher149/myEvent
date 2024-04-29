@@ -1,6 +1,7 @@
 from django.http import HttpResponse, HttpRequest
 from .models import event
 import json
+from utils import get_db_handle
 
 def event_create(request: HttpRequest):
     if request.method == "GET":
