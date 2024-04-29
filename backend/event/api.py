@@ -1,14 +1,13 @@
 from django.http import HttpResponse, HttpRequest
 from .models import event
 import json
-import base64
-from django.http import JsonResponse
 
 def event_create(request: HttpRequest):
     if request.method == "GET":
         return
     print(request.POST.dict())
     image_byte = request.FILES.dict()["image"].read()
+    print(type(image_byte))
     response = HttpResponse()
     # try:
     event_id = event.create_event(request.POST.dict(), image_byte)
@@ -24,6 +23,7 @@ def event_nearest(request: HttpRequest):
         return
     filter = request.POST.dict()
     longlat = [float(filter["long"]), float(filter["lat"])]
+    # response = HttpResponse()
     nearest_event = event.find_event(longlat,
                                     filter["type"],
                                     int(filter["ageMin"]),
