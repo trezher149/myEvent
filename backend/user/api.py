@@ -1,4 +1,4 @@
-from django.http import HttpResponse, HttpRequest
+from django.http import HttpResponse, HttpRequest, JsonResponse
 from .models import user, user_event
 import json
 
@@ -57,17 +57,11 @@ def get_user_profile(request: HttpRequest, user_id: str):
 
 def get_user_events(request: HttpRequest, user_id: str):
     if request.method == "GET":
-        user_events = user_event.get_user_events(user_id)
-        if not user_events:
-            response = HttpResponse(status=404)
-            return response
-
-        response_data = {
-            "user_id": user_events["user_id"],
-            "event_participate": user_events["event_participate"],
-            "event_create": user_events["event_create"]
+        events = user_event.get_user_events(user_id)
+        data = {
+            "userId": user_id,
+            "events": events
         }
 
-        response = HttpResponse(json.dumps(response_data), content_type="application/json")
-        return response
+        return JsonResponse(data)
 
