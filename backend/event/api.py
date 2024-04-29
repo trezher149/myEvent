@@ -88,6 +88,5 @@ def add_participant(request:HttpRequest):
 
 def list_participants(request, event_id):
     if request.method == 'GET':
-        print(event_id)
         part = participant.get_participants(event_id)
-        return JsonResponse(part, safe=False)
+        return JsonResponse({"participants": part}, safe=False)
